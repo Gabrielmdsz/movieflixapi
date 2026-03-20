@@ -8,7 +8,7 @@
     "paths": {
         "/movies": {
             "get": {
-                "tags": ["Movies"],
+                "tags": ["Movie"],
                 "summary": "Obter todos os filmes",
                 "responses": {
                     "200": {
@@ -18,7 +18,7 @@
                                 "schema": {
                                     "type": "array",
                                     "items": {
-                                        "$ref": "#/components/schemas/MovieInput"
+                                        "$ref": "#/components/schemas/Movie"
                                     }
                                 }
                             }
@@ -29,7 +29,7 @@
         },
         "/movies/{id}": {
             "put": {
-                "tags": ["Movies"],
+                "tags": ["Movie"],
                 "summary": "Atualizar um filme existente",
                 "parameters": [
                     {
@@ -65,7 +65,7 @@
                 }
             },
             "delete": {
-                "tags": ["Movies"],
+                "tags": ["Movie"],
                 "summary": "Remover um filme",
                 "parameters": [
                     {
@@ -90,6 +90,40 @@
                     }
                 }
             }
+        },
+        "/moveis/genreName": {
+            "get": {
+                "tags": ["Movie"],
+                "summary": "Filtrar filmes por gênero",
+                "parameters": [
+                    {
+                        "name": "genreName",
+                        "in": "path",
+                        "required": true,
+                        "description": "Nome do gênero",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Movie"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erro interno do servidor"
+                    }
+                }
+            }
         }
     },
     "components": {
@@ -105,13 +139,39 @@
                         "type": "string",
                         "description": "Título do filme"
                     },
-                    "genre": {
-                        "type": "string",
+                    "genre_id": {
+                        "type": "integer",
                         "description": "Gênero do filme"
                     },
-                    "language": {
-                        "type": "string",
-                        "description": "Idioma do filme"
+                    "genres": {
+                        "type": "object",
+                        "properties":{
+                            "id":{
+                                "type":"integer",
+                                "description": "Id do gênero"
+                            },
+                            "name":{
+                                "type":"string",
+                                "description": "Nome do gênero"
+                            }
+                        }
+                    },
+                    "language_id": {
+                        "type": "integer",
+                        "description": "Gênero do filme"
+                    },
+                    "languages": {
+                        "type": "object",
+                        "properties":{
+                            "id":{
+                                "type":"integer",
+                                "description": "Id da lingua"
+                            },
+                            "name":{
+                                "type":"string",
+                                "description": "Nome da lingua"
+                            }
+                        }
                     },
                     "oscar_count": {
                         "type": "integer",
@@ -125,38 +185,38 @@
                 }
             },
             "MovieInput": {
-            "type": "object",
-            "required": [
-                "title",
-                "genre_id",
-                "language_id",
-                "oscar_count",
-                "release_date"
-            ],
-            "properties": {
-                "title": {
-                    "type": "string",
-                    "description": "Título do filme"
-                },
-                "genre_id": {
-                    "type": "integer",
-                    "description": "ID do gênero do filme"
-                },
-                "language_id": {
-                    "type": "integer",
-                    "description": "ID do idioma do filme"
-                },
-                "oscar_count": {
-                    "type": "integer",
-                    "description": "Quantidade de Oscars ganhos pelo filme"
-                },
-                "release_date": {
-                    "type": "string",
-                    "format": "date",
-                    "description": "Data de lançamento do filme"
+                "type": "object",
+                "required": [
+                    "title",
+                    "genre_id",
+                    "language_id",
+                    "oscar_count",
+                    "release_date"
+                ],
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "description": "Título do filme"
+                    },
+                    "genre_id": {
+                        "type": "integer",
+                        "description": "ID do gênero do filme"
+                    },
+                    "language_id": {
+                        "type": "integer",
+                        "description": "ID do idioma do filme"
+                    },
+                    "oscar_count": {
+                        "type": "integer",
+                        "description": "Quantidade de Oscars ganhos pelo filme"
+                    },
+                    "release_date": {
+                        "type": "string",
+                        "format": "date",
+                        "description": "Data de lançamento do filme"
+                    }
                 }
             }
-        }
         }
     }
 }
