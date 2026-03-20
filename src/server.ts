@@ -1,11 +1,16 @@
 import express from "express";
 import { PrismaClient } from "@prisma/client";
+import swaggerUi from "swagger-ui-express";
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
+const swaggerDocument = require("../swagger.json");
 
 const prisma = new PrismaClient();
 const port = 3000;
 const app = express();
 
 app.use(express.json());
+app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.get("/movies", async (req, res) => {
     const movies = await prisma.movie.findMany({
@@ -98,28 +103,27 @@ app.delete("/movies/:id", async (req, res) => {
     res.status(200).send();
 });
 
-app.get("/movies/:genderName", async(req, res) => {
+app.get("/movies/:genderName", async (req, res) => {
     try {
-           const moviesFilteredByGenderName = await prisma.movie.findMany({
-               include: {
-                    genres: true,
-                    languages: true,
-                },
-                where: {
-                    genres: {
-                            name: {
-                                 equals: req.params.genderName,
-                                  mode: "insensitive",
-                             },
+        const moviesFilteredByGenderName = await prisma.movie.findMany({
+            include: {
+                genres: true,
+                languages: true,
+            },
+            where: {
+                genres: {
+                    name: {
+                        equals: req.params.genderName,
+                        mode: "insensitive",
                     },
-                 },
-            });
+                },
+            },
+        });
 
-                   res.status(200).send(moviesFilteredByGenderName);
-   } catch (error) {
-       return res.status(500).send({ message: "Falha ao atualizar um filme" });
-   }
-
+        res.status(200).send(moviesFilteredByGenderName);
+    } catch (error) {
+        return res.status(500).send({ message: "Falha ao atualizar um filme" });
+    }
 });
 
 app.listen(port, () => {
