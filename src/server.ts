@@ -24,12 +24,9 @@ app.get("/movies", async (req, res) => {
         },
     });
     const totalMovies = movies.length
-    let totalDuration = 0 
-    for(let movie of movies){
-        totalDuration += movie.duration ?? 0
-    }
-    const avarageDuration = totalMovies > 0 ? totalDuration / totalMovies : 0;
-    res.json({totalMovies,avarageDuration,movies});
+    const totalDuration = movies.reduce((acc, movie) => acc + (movie.duration ?? 0), 0);
+    const averageDuration = totalMovies > 0 ? totalDuration / totalMovies : 0;
+    res.json({totalMovies,averageDuration,movies});
     } catch (error) {
         console.error(error);
         res.status(500).send({ message: "Houve um problema ao buscar os filmes." });
@@ -37,36 +34,49 @@ app.get("/movies", async (req, res) => {
     
 });
 
-app.get("/movies/sort", async (req, res)=>{
-    const { sort } = req.query
+app.get("/movies/filter", async (req, res)=>{
+    const { sort, language } = req.query
+    const languageName = language as string
+    const sortName = sort as string;
 
-    let orderBy : Prisma.MovieOrderByWithRelationInput | Prisma.MovieOrderByWithRelationInput[] | undefined;
+    let where = {};
+    if(languageName){
+        where = {
+            languages: {
+                name: {
+                    equals:languageName,
+                    mode:"insensitive",
+                }
+            }
+        }
+    }
 
-    if (sort === "title") {
+    let orderBy = {};
+    if (sortName === "title") {
         orderBy = {
             title: "asc",
         };
-    } else if (sort === "release_date") {
+    } else if (sortName === "release_date") {
         orderBy = {
             release_date: "asc",
         };
     }
-
+    
     try {
         const movies = await prisma.movie.findMany({
-            ...( orderBy ? { orderBy } : {} ),
-            include: {
+            orderBy,
+            where,
+            include:{
                 genres: true,
-                languages: true,
-            },
-        });
-
-        res.json(movies);
+                languages:true
+            }
+        })
+        res.json(movies)
     } catch (error) {
         console.error(error);
         res.status(500).send({ message: "Houve um problema ao buscar os filmes." });
     }
-})
+});
 
 app.post("/movies", async (req, res) => {
     const { title, genre_id, language_id, oscar_count, release_date } =
@@ -218,7 +228,7 @@ app.get("/genres", async (req, res) => {
     }
 });
 
-app.delete("genres/:id", async (req, res)=>{
+app.delete("/genres/:id", async (req, res)=>{
     const id  = Number(req.params.id)
 
     try {
@@ -231,10 +241,11 @@ app.delete("genres/:id", async (req, res)=>{
         }
 
         await prisma.genre.delete({ where: { id } })
-        res.status(200).send({ message: "Gênero removido com sucesso." });
+        
     } catch (error) {
         res.status(500).send({ message: "Falha ao remover o gênero" });
     }
+    res.status(200).send({ message: "Gênero removido com sucesso." });
 })
 
 
