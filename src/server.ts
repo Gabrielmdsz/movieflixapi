@@ -1,5 +1,5 @@
 import express from "express";
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 import swaggerUi from "swagger-ui-express";
 import { createRequire } from "module";
 const require = createRequire(import.meta.url);
@@ -13,7 +13,8 @@ app.use(express.json());
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.get("/movies", async (req, res) => {
-    const movies = await prisma.movie.findMany({
+    try {
+        const movies = await prisma.movie.findMany({
         orderBy: {
             title: "asc",
         },
@@ -22,8 +23,50 @@ app.get("/movies", async (req, res) => {
             languages: true,
         },
     });
-    res.json(movies);
+    const totalMovies = movies.length
+    let totalDuration = 0 
+    for(let movie of movies){
+        totalDuration += movie.duration ?? 0
+    }
+    const avarageDuration = totalMovies > 0 ? totalDuration / totalMovies : 0;
+    res.json({totalMovies,avarageDuration,movies});
+    } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Houve um problema ao buscar os filmes." });
+    }
+    
 });
+
+app.get("/movies/sort", async (req, res)=>{
+    const { sort } = req.query
+
+    let orderBy : Prisma.MovieOrderByWithRelationInput | Prisma.MovieOrderByWithRelationInput[] | undefined;
+
+    if (sort === "title") {
+        orderBy = {
+            title: "asc",
+        };
+    } else if (sort === "release_date") {
+        orderBy = {
+            release_date: "asc",
+        };
+    }
+
+    try {
+        const movies = await prisma.movie.findMany({
+            ...( orderBy ? { orderBy } : {} ),
+            include: {
+                genres: true,
+                languages: true,
+            },
+        });
+
+        res.json(movies);
+    } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Houve um problema ao buscar os filmes." });
+    }
+})
 
 app.post("/movies", async (req, res) => {
     const { title, genre_id, language_id, oscar_count, release_date } =
